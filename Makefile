@@ -1,4 +1,4 @@
 make:
-	gcc leer\ archivo.c -o leer\ archivo
+	gcc -std=c99 -Wall -Werror -pedantic procedural.c -o procedural
 clean:
-	rm -rf leer\ archivo
+	rm -rf procedural
