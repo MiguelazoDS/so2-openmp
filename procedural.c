@@ -18,14 +18,14 @@ int main(int argc, char const *argv[]) {
   fseek(file_in,0,SEEK_SET);
   /*while(!feof(file_in)){*/
     count=0;
-    fread(&samples,sizeof(uint16_t), 1, file_in);
+    fread(&samples, sizeof(uint16_t), 1, file_in);
     printf("%d\n", samples);
 
     ciclo=4*samples;
     /*while(ciclo){*/
       valores=malloc(ciclo*sizeof(float));
-      fread(valores,sizeof(float),ciclo,file_in);
-      printf("%.10f\n", *(valores+ciclo));
+      fread(valores, sizeof(float), ciclo, file_in);
+      printf("%.10f\n", *(valores+ciclo-1));
       count++;
       ciclo--;
     /*}*/
