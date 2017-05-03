@@ -11,6 +11,7 @@ int main(int argc, char const *argv[]) {
   uint16_t samples;
   int ciclo;
   int count=0;
+  int i;
   float *valores;
   file_in=fopen(nombre,"rb");
   if (file_in==NULL){
@@ -30,6 +31,11 @@ int main(int argc, char const *argv[]) {
     ciclo--;
     printf("%d\n", count);
     printf("valor 1: %f, valor 2: %f resultado: %.5f\n",*(valores+0),*(valores+1), sqrt(pow(*(valores+0),2)+pow(*(valores+1),2)));
+    printf("valor 1: %f, valor 2: %f resultado: %.5f\n",*(valores+2),*(valores+3), sqrt(pow(*(valores+2),2)+pow(*(valores+3),2)));
+    for (i = 0; i < ciclo/2; i+=2) {
+      printf("valor 1: %f, valor 2: %f resultado: %.5f\n",*(valores+i),*(valores+i+1), sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
+    }
+
   /*}*/
   return 0;
 }
