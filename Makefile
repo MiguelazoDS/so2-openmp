@@ -1,4 +1,4 @@
 make:
-	gcc -Wall -Werror -pedantic procedural.c -o procedural
+	gcc -Wall -Werror -pedantic -lm procedural.c -o procedural
 clean:
 	rm -rf procedural
