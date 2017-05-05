@@ -10,7 +10,7 @@ int main(int argc, char const *argv[]) {
   FILE *file_in;
   uint16_t samples;
   int ciclo;
-  int count=0;
+  int count;
   int i;
   float *valores;
   file_in=fopen(nombre,"rb");
@@ -18,24 +18,19 @@ int main(int argc, char const *argv[]) {
    perror("No se puede abrir el archivo binario");
   }
   fseek(file_in,0,SEEK_SET);
-  /*while(!feof(file_in)){*/
-    count=0;
+  count=0;
+  while(!feof(file_in)){
     fread(&samples, sizeof(uint16_t), 1, file_in);
-    printf("%d\n", samples);
-
     ciclo=4*samples;
     valores=malloc(ciclo*sizeof(float));
     fread(valores, sizeof(float), ciclo, file_in);
-    printf("%.10f\n", *(valores+ciclo-1));
     count++;
     ciclo--;
-    printf("%d\n", count);
-    printf("valor 1: %f, valor 2: %f resultado: %.5f\n",*(valores+0),*(valores+1), sqrt(pow(*(valores+0),2)+pow(*(valores+1),2)));
-    printf("valor 1: %f, valor 2: %f resultado: %.5f\n",*(valores+2),*(valores+3), sqrt(pow(*(valores+2),2)+pow(*(valores+3),2)));
     for (i = 0; i < ciclo/2; i+=2) {
-      printf("valor 1: %f, valor 2: %f resultado: %.5f\n",*(valores+i),*(valores+i+1), sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
+      printf("valor 1: %.10f, valor 2: %.10f resultado: %.10f\n",*(valores+i),*(valores+i+1), sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
     }
+    printf("%d\n", count);
 
-  /*}*/
+  }
   return 0;
 }
