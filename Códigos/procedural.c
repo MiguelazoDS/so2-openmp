@@ -6,30 +6,31 @@
 
 int main(int argc, char const *argv[]) {
   char *nombre="pulsos.iq";
-  char *salida_canal_v="canalV";
-  char *salida_canal_h="canalH";
+  char *canal_v="canalV";
+  char *canal_h="canalH";
   FILE *file_in;
   FILE *file_V;
   FILE *file_H;
   uint16_t samples;
-  /*int lineas;*/
-  int count;
+  char *lineas=malloc(100*sizeof(float));
+  /*int count;*/
   int ciclo, i,j, muestras_gate;
   float *valores;
   char valor[20];
+  /*float acumulador_v;
+  float acumulador_h;*/
   file_in=fopen(nombre,"rb");
   if (file_in==NULL){
    perror("No se puede abrir el archivo binario");
   }
   fseek(file_in,0,SEEK_SET);
-  count=0;
-  /*while(!feof(file_in)){*/
-    while(fread(&samples,sizeof(uint16_t), 1, file_in)){
-    count++;
-    file_V=fopen(salida_canal_v,"w");
-    file_H=fopen(salida_canal_h,"w");
-    /*Guardo en samples el primer valor de 16 bits que tiene el archivo.*/
-    /*fread(&samples, sizeof(uint16_t), 1, file_in);*/
+    /*Mientras fread devuelva el número de elementos leídos el bucle continua.
+    Se lee el primer valor de 16 bits que contiene la cantidad de muestras.*/
+    /*while(fread(&samples,sizeof(uint16_t), 1, file_in)){*/
+    /*count=0;*/
+    fread(&samples,sizeof(uint16_t), 1, file_in);
+    file_V=fopen(canal_v,"w");
+    file_H=fopen(canal_h,"w");
     /*La cantidad total de muestras de cada pulso es 4 veces el valor samples.*/
     ciclo=4*samples;
     /*Reservo la cantidad necesaria para guardar un pulso.*/
@@ -53,19 +54,20 @@ int main(int argc, char const *argv[]) {
     fclose(file_V);
     fclose(file_H);
     muestras_gate=samples*2e-3;
-    printf("%d %d %d\n", muestras_gate, (int)samples, count);
-    if(count==73){
-      printf("%f\n", *(valores+samples));
-    }
-    /*while(samples){
-      printf("%d\n", (int)samples--);
+    printf("%d %d\n", muestras_gate, (int)samples);
+    file_V=fopen(canal_v,"r");
+    file_H=fopen(canal_h,"r");
+    while(samples){
       samples--;
-    }*/
+      fgets(lineas, 100,file_H);
+      printf("%s\n", lineas);
+    }
     /*Libera la memoria para poder ser alocar memoria nuevamente.*/
     free(valores);
     /*Borro archivos temporales luego de haber calculado los datos necesarios*/
-    unlink(salida_canal_v);
-    unlink(salida_canal_h);
-  }
+    unlink(canal_v);
+    unlink(canal_h);
+  /*}*/
+  fclose(file_in);
   return 0;
 }
