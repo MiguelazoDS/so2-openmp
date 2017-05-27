@@ -3,5 +3,6 @@ make:
 clean:
 	rm -rf procedural
 	rm -rf *.txt
+	rm -rf canal?
 debug:
 	gdb procedural
