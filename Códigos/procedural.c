@@ -32,6 +32,7 @@ void matriz(uint16_t samples,float ***matrix){
   char *canal_v="canalV";
   /*char *canal_h="canalH";*/
   int muestras_gate,cant=0,k;
+  int static value=0;
   float acumulador_v;
   uint16_t aux;
   file_V=fopen(canal_v,"r");
@@ -53,9 +54,9 @@ void matriz(uint16_t samples,float ***matrix){
     muestras_gate++;
     if(muestras_gate==(int)(aux*2e-3)){
       if(cant<500){
-        (*matrix)[0][k]=acumulador_v/(int)(aux*2e-3);
+        (*matrix)[13][k]=acumulador_v/(int)(aux*2e-3);
         k++;
-        printf("%.10f %d\n", acumulador_v/(int)(aux*2e-3), cant++);
+        /*printf("%.10f %d\n", acumulador_v/(int)(aux*2e-3), cant++);*/
         /*printf("%.10f\n", acumulador_h/(int)(aux*2e-3));*/
         acumulador_v=0;
         /*acumulador_h=0;*/
@@ -63,7 +64,9 @@ void matriz(uint16_t samples,float ***matrix){
       }
     }
   }
+  printf("valor estático: %d\n",value );
 
+  value++;
   /*Libera la memoria para poder ser alocar memoria nuevamente.*/
   /*free(valores);*/
   /*Borro archivos temporales luego de haber calculado los datos necesarios*/
@@ -88,8 +91,8 @@ void complejo(FILE **file_in,float ***matrix){
   float *valores;
 
   *file_in=fopen(nombre,"rb");
-  /*while(fread(&samples,sizeof(uint16_t), 1, *file_in)){*/
-    fread(&samples,sizeof(uint16_t), 1, *file_in);
+  while(fread(&samples,sizeof(uint16_t), 1, *file_in)){
+    /*fread(&samples,sizeof(uint16_t), 1, *file_in);*/
   file_V=fopen(canal_v,"w");
   file_H=fopen(canal_h,"w");
 
@@ -117,7 +120,7 @@ void complejo(FILE **file_in,float ***matrix){
     fclose(file_H);
     matriz(samples,matrix);
     free(valores);
-  /*}*/
+  }
 }
 
 
