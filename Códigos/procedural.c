@@ -24,7 +24,7 @@ int cantidad_pulsos(FILE **file_in){
   return cantidad;
 }
 
-void complejo(FILE **file_in, FILE **file_V,FILE **file_H){
+void complejo(FILE **file_in, FILE **file_V, FILE **file_H){
   uint16_t samples;
   int i,j,ciclo;
   char valor[20];
@@ -32,36 +32,41 @@ void complejo(FILE **file_in, FILE **file_V,FILE **file_H){
   char *canal_v="canalV";
   char *canal_h="canalH";
   float *valores;
+  int cant=0;
   *file_in=fopen(nombre,"rb");
+  while(fread(&samples,sizeof(uint16_t), 1, *file_in)){
+    cant++;
   *file_V=fopen(canal_v,"w");
   *file_H=fopen(canal_h,"w");
-  fread(&samples,sizeof(uint16_t), 1, *file_in);
 
-  /*La cantidad total de muestras de cada pulso es 4 veces el valor samples.*/
-  ciclo=4*samples;
-  /*Reservo la cantidad necesaria para guardar un pulso.*/
-  valores=malloc(ciclo*sizeof(float));
+    /*La cantidad total de muestras de cada pulso es 4 veces el valor samples.*/
+    ciclo=4*samples;
+    /*Reservo la cantidad necesaria para guardar un pulso.*/
+    valores=malloc(ciclo*sizeof(float));
 
-  fread(valores, sizeof(float), ciclo, *file_in);
-  /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
-  j=0;
-  for (i = 0; i < ciclo; i+=2){
-    /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
-    if(j>=0&&j<samples){
-      sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-      fputs(valor,*file_V);
+    fread(valores, sizeof(float), ciclo, *file_in);
+    /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
+    j=0;
+    for (i = 0; i < ciclo; i+=2){
+      /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
+      if(j>=0&&j<samples){
+        sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
+        fputs(valor,*file_V);
+      }
+      if(j>=samples){
+        sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
+        fputs(valor,*file_H);
+      }
+      j++;
     }
-    if(j>=samples){
-      sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-      fputs(valor,*file_H);
-    }
-    j++;
+    fclose(*file_V);
+    fclose(*file_H);
+    free(valores);
+    printf("%d\n", cant);
   }
-  fclose(*file_V);
-  fclose(*file_H);
 }
 
-void matriz(){
+void matriz(FILE **file_V, FILE **file_H){
 
 }
 
