@@ -20,22 +20,22 @@ int cantidad_pulsos(FILE **file_in){
     cantidad++;
   }
   fseek(*file_in,0,SEEK_SET);
+  fclose(*file_in);
   return cantidad;
 }
 
-void complejo(FILE **file_in){
+void complejo(FILE **file_in, FILE **file_V,FILE **file_H){
   uint16_t samples;
   int i,j,ciclo;
   char valor[20];
-  float *valores;
+  char *nombre="pulsos.iq";
   char *canal_v="canalV";
   char *canal_h="canalH";
-  FILE *file_V;
-  FILE *file_H;
-
+  float *valores;
+  *file_in=fopen(nombre,"rb");
+  *file_V=fopen(canal_v,"w");
+  *file_H=fopen(canal_h,"w");
   fread(&samples,sizeof(uint16_t), 1, *file_in);
-  file_V=fopen(canal_v,"w");
-  file_H=fopen(canal_h,"w");
 
   /*La cantidad total de muestras de cada pulso es 4 veces el valor samples.*/
   ciclo=4*samples;
@@ -49,26 +49,29 @@ void complejo(FILE **file_in){
     /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
     if(j>=0&&j<samples){
       sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-      fputs(valor,file_V);
+      fputs(valor,*file_V);
     }
     if(j>=samples){
       sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-      fputs(valor,file_H);
+      fputs(valor,*file_H);
     }
     j++;
   }
-  fclose(file_V);
-  fclose(file_H);
+  fclose(*file_V);
+  fclose(*file_H);
+}
+
+void matriz(){
+
 }
 
 int main(int argc, char const *argv[]) {
   /*nombre de los archivos.*/
-  /*char *canal_v="canalV";
-  char *canal_h="canalH";*/
+
   /*manejadores de archivos.*/
   FILE *file_in;
-  /*FILE *file_V;
-  FILE *file_H;*/
+  FILE *file_V;
+  FILE *file_H;
   /*Tanto en samples como en aux se guarda la cantidad de muestras de cada pulso.*/
   /*uint16_t samples;
   uint16_t aux;*/
@@ -86,18 +89,19 @@ int main(int argc, char const *argv[]) {
   /*Variables que van acumulando hasta el valor de muestras para cada gate.*/
   /*float acumulador_v;
   float acumulador_h;*/
-  int cantidad=cantidad_pulsos(&file_in);;
+  int cantidad=cantidad_pulsos(&file_in);
   /*Valor necesario para armar la matriz gate-pulso.*/
   printf("%d\n", cantidad);
   /*Matrices gate-pulso para cada canal.*/
   /*float **matrizV;
   float **matrizH;*/
   /*file_in=fopen(nombre,"rb");*/
-  if (file_in==NULL){
+  /*if (file_in==NULL){
    perror("No se puede abrir el archivo binario");
-  }
+ }*/
 
-  complejo(&file_in);
+  complejo(&file_in,&file_V,&file_H);
+  /*matriz(&file_V,&file_H);*/
   /*Cuento la cantidad de pulsos y guardo en una variable para construir después la matriz gate-pulso*/
   /*while(fread(&samples,sizeof(uint16_t),1,file_in)){
     fseek(file_in,4*samples*sizeof(float),SEEK_CUR);
