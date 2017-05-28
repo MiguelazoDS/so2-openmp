@@ -24,20 +24,64 @@ int cantidad_pulsos(FILE **file_in){
   return cantidad;
 }
 
-void complejo(FILE **file_in, FILE **file_V, FILE **file_H){
+void matriz(uint16_t samples){
+  FILE *file_V;
+  /*FILE *file_H;*/
+  char *lineas_v=malloc(100*sizeof(float));
+  /*char *lineas_h=malloc(100*sizeof(float));*/
+  char *canal_v="canalV";
+  /*char *canal_h="canalH";*/
+  int muestras_gate,cant=0;
+  float acumulador_v;
+  uint16_t aux;
+  file_V=fopen(canal_v,"r");
+  /*file_H=fopen(canal_h,"r");*/
+  acumulador_v=0;
+  muestras_gate=0;
+  aux=samples;
+  while(samples){
+    samples--;
+    fgets(lineas_v, 100,file_V);
+    /*fgets(lineas_h, 100, file_H);*/
+    acumulador_v+=atof(lineas_v);
+    /*acumulador_h+=atof(lineas_h);*/
+    muestras_gate++;
+    if(muestras_gate==(int)(aux*2e-3)){
+      printf("%.10f %d\n", acumulador_v/(int)(aux*2e-3), ++cant);
+      /*printf("%.10f\n", acumulador_h/(int)(aux*2e-3));*/
+      acumulador_v=0;
+      /*acumulador_h=0;*/
+      muestras_gate=0;
+    }
+  }
+  /*Libera la memoria para poder ser alocar memoria nuevamente.*/
+  /*free(valores);*/
+  /*Borro archivos temporales luego de haber calculado los datos necesarios*/
+  /*unlink(canal_v);*/
+  /*unlink(canal_h);*/
+/*}*/
+}
+
+void autocorrelacion(){
+
+}
+
+void complejo(FILE **file_in){
   uint16_t samples;
+  FILE *file_V;
+  FILE *file_H;
   int i,j,ciclo;
   char valor[20];
   char *nombre="pulsos.iq";
   char *canal_v="canalV";
   char *canal_h="canalH";
   float *valores;
-  int cant=0;
+
   *file_in=fopen(nombre,"rb");
   while(fread(&samples,sizeof(uint16_t), 1, *file_in)){
-    cant++;
-  *file_V=fopen(canal_v,"w");
-  *file_H=fopen(canal_h,"w");
+    /*fread(&samples,sizeof(uint16_t), 1, *file_in);*/
+  file_V=fopen(canal_v,"w");
+  file_H=fopen(canal_h,"w");
 
     /*La cantidad total de muestras de cada pulso es 4 veces el valor samples.*/
     ciclo=4*samples;
@@ -51,32 +95,30 @@ void complejo(FILE **file_in, FILE **file_V, FILE **file_H){
       /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
       if(j>=0&&j<samples){
         sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-        fputs(valor,*file_V);
+        fputs(valor,file_V);
       }
       if(j>=samples){
         sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-        fputs(valor,*file_H);
+        fputs(valor,file_H);
       }
       j++;
     }
-    fclose(*file_V);
-    fclose(*file_H);
+    fclose(file_V);
+    fclose(file_H);
+    matriz(samples);
     free(valores);
-    printf("%d\n", cant);
   }
 }
 
-void matriz(FILE **file_V, FILE **file_H){
-
-}
 
 int main(int argc, char const *argv[]) {
   /*nombre de los archivos.*/
 
   /*manejadores de archivos.*/
   FILE *file_in;
-  FILE *file_V;
-  FILE *file_H;
+
+  /*float **matrizV;
+  float **matrizH;*/
   /*Tanto en samples como en aux se guarda la cantidad de muestras de cada pulso.*/
   /*uint16_t samples;
   uint16_t aux;*/
@@ -105,7 +147,7 @@ int main(int argc, char const *argv[]) {
    perror("No se puede abrir el archivo binario");
  }*/
 
-  complejo(&file_in,&file_V,&file_H);
+  complejo(&file_in);
   /*matriz(&file_V,&file_H);*/
   /*Cuento la cantidad de pulsos y guardo en una variable para construir después la matriz gate-pulso*/
   /*while(fread(&samples,sizeof(uint16_t),1,file_in)){
