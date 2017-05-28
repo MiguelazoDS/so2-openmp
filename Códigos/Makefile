@@ -4,5 +4,6 @@ clean:
 	rm -rf procedural
 	rm -rf *.txt
 	rm -rf canal?
+	rm -rf *.csv
 debug:
 	gdb procedural

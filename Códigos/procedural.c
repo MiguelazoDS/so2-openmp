@@ -45,6 +45,7 @@ void matriz(uint16_t samples,float ***matrix){
     (*matrix)[k]=malloc(500*sizeof(float));
   }
   k=0;
+  cant=0;
   while(samples){
     samples--;
     fgets(lineas_v, 100,file_V);
@@ -83,14 +84,23 @@ void complejo(FILE **file_in,float ***matrix){
   uint16_t samples;
   FILE *file_V;
   FILE *file_H;
+  FILE *file_out;
   int i,j,ciclo;
   char valor[20];
   char *nombre="pulsos.iq";
   char *canal_v="canalV";
   char *canal_h="canalH";
+  char *out="matriz.csv";
   float *valores;
+  char *lineas_v=malloc(100*sizeof(float));
+  /*char *lineas_h=malloc(100*sizeof(float));*/
+  int muestras_gate,cant=0,k;
+  int value=0;
+  float acumulador_v;
+  uint16_t aux;
 
   *file_in=fopen(nombre,"rb");
+  file_out=fopen(out,"a");
   while(fread(&samples,sizeof(uint16_t), 1, *file_in)){
     /*fread(&samples,sizeof(uint16_t), 1, *file_in);*/
   file_V=fopen(canal_v,"w");
@@ -118,18 +128,52 @@ void complejo(FILE **file_in,float ***matrix){
     }
     fclose(file_V);
     fclose(file_H);
-    matriz(samples,matrix);
+
+    file_V=fopen(canal_v,"r");
+    /*file_H=fopen(canal_h,"r");*/
+    acumulador_v=0;
+    muestras_gate=0;
+    aux=samples;
+    *matrix=malloc(72*sizeof(float*));
+    for (k = 0; k < 72; k++) {
+      (*matrix)[k]=malloc(500*sizeof(float));
+    }
+    k=0;
+    fprintf(file_out, "\n");
+    cant=0;
+    while(samples){
+      samples--;
+      fgets(lineas_v, 100,file_V);
+      /*fgets(lineas_h, 100, file_H);*/
+      acumulador_v+=atof(lineas_v);
+      /*acumulador_h+=atof(lineas_h);*/
+      muestras_gate++;
+      if(muestras_gate==(int)(aux*2e-3)){
+        if(cant<500){
+          fprintf(file_out, "%.10f,", acumulador_v/(int)(aux*2e-3));
+          (*matrix)[value][k]=acumulador_v/(int)(aux*2e-3);
+          k++;
+          cant++;
+          printf("%.10f %d\n", acumulador_v/(int)(aux*2e-3), cant);
+          /*printf("%.10f\n", acumulador_h/(int)(aux*2e-3));*/
+          acumulador_v=0;
+          /*acumulador_h=0;*/
+          muestras_gate=0;
+        }
+      }
+    }
+    printf("valor: %d\n",value++);
+
+
+    /*Libera la memoria para poder ser alocar memoria nuevamente.*/
     free(valores);
   }
 }
 
 
 int main(int argc, char const *argv[]) {
-  /*nombre de los archivos.*/
-
   /*manejadores de archivos.*/
   FILE *file_in;
-
   /*float **matrizV;
   float **matrizH;*/
   /*Tanto en samples como en aux se guarda la cantidad de muestras de cada pulso.*/
@@ -149,10 +193,10 @@ int main(int argc, char const *argv[]) {
   /*Variables que van acumulando hasta el valor de muestras para cada gate.*/
   /*float acumulador_v;
   float acumulador_h;*/
-  float **matrix;
-  int k;
+  /*float **matrix;
+
   int cantidad=cantidad_pulsos(&file_in);
-  printf("%d\n", cantidad);
+  printf("%d\n", cantidad);*/
   /*Valor necesario para armar la matriz gate-pulso.*/
   /*Matrices gate-pulso para cada canal.*/
   /*float **matrizV;
@@ -161,7 +205,8 @@ int main(int argc, char const *argv[]) {
   /*if (file_in==NULL){
    perror("No se puede abrir el archivo binario");
  }*/
-
+   int k;
+ float **matrix;
   complejo(&file_in,&matrix);
   for (k = 0; k < 500; k++) {
     printf("%.10f\n", matrix[0][k]);
