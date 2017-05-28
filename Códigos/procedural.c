@@ -31,14 +31,20 @@ void matriz(uint16_t samples){
   /*char *lineas_h=malloc(100*sizeof(float));*/
   char *canal_v="canalV";
   /*char *canal_h="canalH";*/
-  int muestras_gate,cant=0;
+  int muestras_gate,cant=0,k;
   float acumulador_v;
   uint16_t aux;
+  float **matriz;
   file_V=fopen(canal_v,"r");
   /*file_H=fopen(canal_h,"r");*/
   acumulador_v=0;
   muestras_gate=0;
   aux=samples;
+  matriz=malloc(72*sizeof(float*));
+  for (k = 0; k < 72; k++) {
+    matriz[k]=malloc(500*sizeof(float));
+  }
+  k=0;
   while(samples){
     samples--;
     fgets(lineas_v, 100,file_V);
@@ -47,12 +53,19 @@ void matriz(uint16_t samples){
     /*acumulador_h+=atof(lineas_h);*/
     muestras_gate++;
     if(muestras_gate==(int)(aux*2e-3)){
-      printf("%.10f %d\n", acumulador_v/(int)(aux*2e-3), ++cant);
-      /*printf("%.10f\n", acumulador_h/(int)(aux*2e-3));*/
-      acumulador_v=0;
-      /*acumulador_h=0;*/
-      muestras_gate=0;
+      if(cant<500){
+        matriz[0][k]=acumulador_v/(int)(aux*2e-3);
+        k++;
+        printf("%.10f %d\n", acumulador_v/(int)(aux*2e-3), cant++);
+        /*printf("%.10f\n", acumulador_h/(int)(aux*2e-3));*/
+        acumulador_v=0;
+        /*acumulador_h=0;*/
+        muestras_gate=0;
+      }
     }
+  }
+  for (k = 0; k < 500; k++) {
+    printf("%.10f\n", matriz[0][k]);
   }
   /*Libera la memoria para poder ser alocar memoria nuevamente.*/
   /*free(valores);*/
@@ -78,8 +91,8 @@ void complejo(FILE **file_in){
   float *valores;
 
   *file_in=fopen(nombre,"rb");
-  while(fread(&samples,sizeof(uint16_t), 1, *file_in)){
-    /*fread(&samples,sizeof(uint16_t), 1, *file_in);*/
+  /*while(fread(&samples,sizeof(uint16_t), 1, *file_in)){*/
+    fread(&samples,sizeof(uint16_t), 1, *file_in);
   file_V=fopen(canal_v,"w");
   file_H=fopen(canal_h,"w");
 
@@ -107,7 +120,7 @@ void complejo(FILE **file_in){
     fclose(file_H);
     matriz(samples);
     free(valores);
-  }
+  /*}*/
 }
 
 
@@ -137,8 +150,8 @@ int main(int argc, char const *argv[]) {
   /*float acumulador_v;
   float acumulador_h;*/
   int cantidad=cantidad_pulsos(&file_in);
-  /*Valor necesario para armar la matriz gate-pulso.*/
   printf("%d\n", cantidad);
+  /*Valor necesario para armar la matriz gate-pulso.*/
   /*Matrices gate-pulso para cada canal.*/
   /*float **matrizV;
   float **matrizH;*/
