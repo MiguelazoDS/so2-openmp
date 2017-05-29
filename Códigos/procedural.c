@@ -65,8 +65,7 @@ void complejo(FILE **file_in){
     muestras_gate=0;
     aux=samples;
 
-    fprintf(file_out_v, "\n");
-    fprintf(file_out_h, "\n");
+
     cant=0;
     while(samples){
       samples--;
@@ -86,7 +85,8 @@ void complejo(FILE **file_in){
         }
       }
     }
-
+    fprintf(file_out_v, "\n");
+    fprintf(file_out_h, "\n");
     /*Libera la memoria para poder ser alocar memoria nuevamente.*/
     free(valores);
   }
