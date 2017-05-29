@@ -84,23 +84,27 @@ void complejo(FILE **file_in,float ***matrix){
   uint16_t samples;
   FILE *file_V;
   FILE *file_H;
-  FILE *file_out;
+  FILE *file_out_v;
+  FILE *file_out_h;
   int i,j,ciclo;
   char valor[20];
   char *nombre="pulsos.iq";
   char *canal_v="canalV";
   char *canal_h="canalH";
-  char *out="matriz.csv";
+  char *out_v="matriz_v.csv";
+  char *out_h="matriz_h.csv";
   float *valores;
   char *lineas_v=malloc(100*sizeof(float));
-  /*char *lineas_h=malloc(100*sizeof(float));*/
+  char *lineas_h=malloc(100*sizeof(float));
   int muestras_gate,cant=0,k;
   int value=0;
   float acumulador_v;
+  float acumulador_h;
   uint16_t aux;
 
   *file_in=fopen(nombre,"rb");
-  file_out=fopen(out,"a");
+  file_out_v=fopen(out_v,"a");
+  file_out_h=fopen(out_h,"a");
   while(fread(&samples,sizeof(uint16_t), 1, *file_in)){
     /*fread(&samples,sizeof(uint16_t), 1, *file_in);*/
   file_V=fopen(canal_v,"w");
@@ -130,8 +134,9 @@ void complejo(FILE **file_in,float ***matrix){
     fclose(file_H);
 
     file_V=fopen(canal_v,"r");
-    /*file_H=fopen(canal_h,"r");*/
+    file_H=fopen(canal_h,"r");
     acumulador_v=0;
+    acumulador_h=0;
     muestras_gate=0;
     aux=samples;
     *matrix=malloc(72*sizeof(float*));
@@ -139,25 +144,27 @@ void complejo(FILE **file_in,float ***matrix){
       (*matrix)[k]=malloc(500*sizeof(float));
     }
     k=0;
-    fprintf(file_out, "\n");
+    fprintf(file_out_v, "\n");
+    fprintf(file_out_h, "\n");
     cant=0;
     while(samples){
       samples--;
-      fgets(lineas_v, 100,file_V);
-      /*fgets(lineas_h, 100, file_H);*/
+      fgets(lineas_v, 100, file_V);
+      fgets(lineas_h, 100, file_H);
       acumulador_v+=atof(lineas_v);
-      /*acumulador_h+=atof(lineas_h);*/
+      acumulador_h+=atof(lineas_h);
       muestras_gate++;
       if(muestras_gate==(int)(aux*2e-3)){
         if(cant<500){
-          fprintf(file_out, "%.10f,", acumulador_v/(int)(aux*2e-3));
+          fprintf(file_out_v, "%.10f,", acumulador_v/(int)(aux*2e-3));
+          fprintf(file_out_h, "%.10f,", acumulador_h/(int)(aux*2e-3));
           (*matrix)[value][k]=acumulador_v/(int)(aux*2e-3);
           k++;
           cant++;
           printf("%.10f %d\n", acumulador_v/(int)(aux*2e-3), cant);
           /*printf("%.10f\n", acumulador_h/(int)(aux*2e-3));*/
           acumulador_v=0;
-          /*acumulador_h=0;*/
+          acumulador_h=0;
           muestras_gate=0;
         }
       }
