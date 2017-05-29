@@ -6,6 +6,18 @@
 
 #define GATES 500
 
+void autocorrelation(float *y, float *z){
+	float aux;
+	int i;
+	for (i = 0; i < M-1; i++){
+		aux += y[i];
+	}
+
+	for (i = 0; i < long_autoc; i++) {
+		z[i]=y[i+1]*aux;
+	}
+}
+
 void complejo(FILE **file_in){
   uint16_t samples;
   FILE *file_V;
