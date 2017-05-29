@@ -92,7 +92,6 @@ void complejo(FILE **file_in){
   }
 }
 
-
 int main(int argc, char const *argv[]) {
   /*manejadores de archivos.*/
   FILE *file_in;
