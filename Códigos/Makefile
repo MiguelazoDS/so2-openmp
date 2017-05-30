@@ -7,6 +7,7 @@ clean:
 	rm -rf *.csv
 	rm -rf gmon.out
 	rm -rf out
+	rm binario_autoc
 debug:
 	gdb procedural
 gprof:

@@ -6,7 +6,13 @@
 
 #define GATES 500
 
-void autocorrelacion(int filas, float ***matrix_v, float ***matrix_h, float **autoc_v, float **autoc_h){
+typedef struct Final{
+	uint16_t cantidad;
+	float *a_v;
+	float *a_h;
+}Final;
+
+void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float **autoc_v, float **autoc_h){
 	int i,j;
 	float temp_v;
 	float temp_h;
@@ -32,7 +38,7 @@ int cantidad_pulsos(FILE **file_in){
    perror("No se puede abrir el archivo binario");
   }
 
-  while(fread(&samples,sizeof(uint16_t),1,*file_in)){
+  while(fread(&samples,1,sizeof(uint16_t),*file_in)){
     fseek(*file_in,4*samples*sizeof(float),SEEK_CUR);
     cantidad++;
   }
@@ -61,12 +67,12 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
   float acumulador_v;
   float acumulador_h;
   uint16_t aux;
-	int filas=0;
+	uint16_t filas=0;
 
   *file_in=fopen(nombre,"rb");
   file_out_v=fopen(out_v,"a");
   file_out_h=fopen(out_h,"a");
-  while(fread(&samples,sizeof(uint16_t), 1, *file_in)){
+  while(fread(&samples,1,sizeof(uint16_t), *file_in)){
     /*fread(&samples,sizeof(uint16_t), 1, *file_in);*/
   file_V=fopen(canal_v,"w");
   file_H=fopen(canal_h,"w");
@@ -76,7 +82,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     /*Reservo la cantidad necesaria para guardar un pulso.*/
     valores=malloc(ciclo*sizeof(float));
 
-    fread(valores, sizeof(float), ciclo, *file_in);
+    fread(valores, ciclo,sizeof(float),  *file_in);
     /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
     j=0;
     for (i = 0; i < ciclo; i+=2){
@@ -137,12 +143,17 @@ int main(int argc, char const *argv[]) {
 	float **matrix_h;
 	float *autoc_v;
 	float *autoc_h;
+	FILE *file_out;
+	float *otro;
+	char *binary="binario_autoc";
 /*	float *autoc_e;
 	float **e;*/
 	int i;
 	/*int j;*/
 	/*int v=0;*/
-	int filas=cantidad_pulsos(&file_in);
+	uint16_t filas=cantidad_pulsos(&file_in);
+	uint16_t algo;
+Final final;
 
 	matrix_v=malloc(filas*sizeof(float*));
 	matrix_h=malloc(filas*sizeof(float*));
@@ -180,6 +191,33 @@ int main(int argc, char const *argv[]) {
 	for (i = 0; i < GATES; i++) {
 		printf("%.10f\n", autoc_h[i]);
 	}
-  /*fclose(file_in);*/
+
+	file_out=fopen(binary,"wb");
+	final.cantidad=GATES;
+	final.a_v=autoc_v;
+	final.a_h=autoc_h;
+
+	printf("%d   %d\n", final.cantidad, filas);
+	for (i = 0; i < GATES; i++) {
+
+		printf("cantidad %d, valores v %.10f, valores h %.10f\n", final.cantidad,final.a_v[i], final.a_h[i]);
+	}
+
+	fwrite(&final,1,sizeof(Final),file_out);
+	/*fwrite(&autoc_v, GATES, sizeof(float),file_out);
+	fwrite(&autoc_h, GATES, sizeof(float),file_out);*/
+	fclose(file_out);
+	/*file_in=fopen(binary,"rb");*/
+
+
+file_out=fopen(binary,"rb");
+while(fread(&algo,1,sizeof(uint16_t),file_in));
+{
+	printf("cantidad %d\n", algo);
+	otro=malloc(2*filas*sizeof(float));
+	fread(otro, 2*filas, sizeof(float),file_in);
+}
+
+  fclose(file_out);
   return 0;
 }
