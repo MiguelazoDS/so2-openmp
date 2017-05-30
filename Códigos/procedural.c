@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define GATES 500
-
+/*
 void autocorrelation(float *y, float *z){
 	float aux;
 	int i;
@@ -16,9 +16,11 @@ void autocorrelation(float *y, float *z){
 	for (i = 0; i < long_autoc; i++) {
 		z[i]=y[i+1]*aux;
 	}
-}
+}*/
 
-void complejo(FILE **file_in){
+
+
+void complejo(FILE **file_in,float ***matrix_v,float ***matrix_h){
   uint16_t samples;
   FILE *file_V;
   FILE *file_H;
@@ -38,6 +40,7 @@ void complejo(FILE **file_in){
   float acumulador_v;
   float acumulador_h;
   uint16_t aux;
+	int filas=0;
 
   *file_in=fopen(nombre,"rb");
   file_out_v=fopen(out_v,"a");
@@ -77,7 +80,6 @@ void complejo(FILE **file_in){
     muestras_gate=0;
     aux=samples;
 
-
     cant=0;
     while(samples){
       samples--;
@@ -90,6 +92,8 @@ void complejo(FILE **file_in){
         if(cant<500){
           fprintf(file_out_v, "%.10f,", acumulador_v/(int)(aux*2e-3));
           fprintf(file_out_h, "%.10f,", acumulador_h/(int)(aux*2e-3));
+					(*matrix_v)[filas][cant]=acumulador_v/(int)(aux*2e-3);
+					(*matrix_h)[filas][cant]=acumulador_h/(int)(aux*2e-3);
           cant++;
           acumulador_v=0;
           acumulador_h=0;
@@ -97,6 +101,7 @@ void complejo(FILE **file_in){
         }
       }
     }
+		filas++;
     fprintf(file_out_v, "\n");
     fprintf(file_out_h, "\n");
     /*Libera la memoria para poder ser alocar memoria nuevamente.*/
@@ -107,7 +112,29 @@ void complejo(FILE **file_in){
 int main(int argc, char const *argv[]) {
   /*manejadores de archivos.*/
   FILE *file_in;
-  complejo(&file_in);
+	float **matrix_v;
+	float **matrix_h;
+	int i,j;
+	int filas;
+
+
+
+	matrix_v=malloc(72*sizeof(float*));
+	matrix_h=malloc(72*sizeof(float*));
+	for (i = 0; i < 72; i++) {
+		matrix_v[i]=malloc(500*sizeof(float));
+		matrix_h[i]=malloc(500*sizeof(float));
+	}
+
+  complejo(&file_in,&matrix_v,&matrix_h);
+
+
+	for (i = 0; i < 72; i++) {
+		for (j = 0; j < 500 ;j++) {
+			printf("%.10f      ", matrix_h[i][j]);
+		}
+		printf("\n");
+	}
 
   fclose(file_in);
   return 0;
