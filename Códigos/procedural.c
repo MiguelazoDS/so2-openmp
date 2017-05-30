@@ -5,18 +5,22 @@
 #include <unistd.h>
 
 #define GATES 500
-/*
-void autocorrelation(float *y, float *z){
-	float aux;
-	int i;
-	for (i = 0; i < M-1; i++){
-		aux += y[i];
-	}
 
-	for (i = 0; i < long_autoc; i++) {
-		z[i]=y[i+1]*aux;
+void autocorrelacion(int filas, float ***matrix_v, float ***matrix_h, float **autoc_v, float **autoc_h){
+	int i,j;
+	float temp_v;
+	float temp_h;
+	for (i = 0; i < GATES; i++) {
+		for (j = 0; j < filas-1; j++) {
+			temp_v+=(*matrix_v)[j][i]*(*matrix_v)[j+1][i];
+			temp_h+=(*matrix_h)[j][i]*(*matrix_h)[j+1][i];
+		}
+		(*autoc_v)[i]=temp_v/filas;
+		(*autoc_h)[i]=temp_h/filas;
+		temp_v=0;
+		temp_h=0;
 	}
-}*/
+}
 
 /*Recibe la dirección del puntero para abrir un archivo.*/
 int cantidad_pulsos(FILE **file_in){
@@ -37,7 +41,7 @@ int cantidad_pulsos(FILE **file_in){
   return cantidad;
 }
 
-void complejo(FILE **file_in,float ***matrix_v,float ***matrix_h){
+void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
   uint16_t samples;
   FILE *file_V;
   FILE *file_H;
@@ -106,7 +110,7 @@ void complejo(FILE **file_in,float ***matrix_v,float ***matrix_h){
       acumulador_h+=atof(lineas_h);
       muestras_gate++;
       if(muestras_gate==(int)(aux*2e-3)){
-        if(cant<500){
+        if(cant<GATES){
           fprintf(file_out_v, "%.10f,", acumulador_v/(int)(aux*2e-3));
           fprintf(file_out_h, "%.10f,", acumulador_h/(int)(aux*2e-3));
 					(*matrix_v)[filas][cant]=acumulador_v/(int)(aux*2e-3);
@@ -131,26 +135,51 @@ int main(int argc, char const *argv[]) {
   FILE *file_in;
 	float **matrix_v;
 	float **matrix_h;
-	int i,j;
+	float *autoc_v;
+	float *autoc_h;
+/*	float *autoc_e;
+	float **e;*/
+	int i;
+	/*int j;*/
+	/*int v=0;*/
 	int filas=cantidad_pulsos(&file_in);
 
 	matrix_v=malloc(filas*sizeof(float*));
 	matrix_h=malloc(filas*sizeof(float*));
 	for (i = 0; i < filas; i++) {
-		matrix_v[i]=malloc(500*sizeof(float));
-		matrix_h[i]=malloc(500*sizeof(float));
+		matrix_v[i]=malloc(GATES*sizeof(float));
+		matrix_h[i]=malloc(GATES*sizeof(float));
 	}
 
-  complejo(&file_in,&matrix_v,&matrix_h);
+  matrices(&file_in,&matrix_v,&matrix_h);
 
-
-	for (i = 0; i < 72; i++) {
-		for (j = 0; j < 500 ;j++) {
+	/*for (i = 0; i < 72; i++) {
+		for (j = 0; j < GATES ;j++) {
 			printf("%.10f      ", matrix_v[i][j]);
 		}
 		printf("\n");
+	}*/
+
+	autoc_v=malloc(GATES*sizeof(float));
+	autoc_h=malloc(GATES*sizeof(float));
+	/*autoc_e=malloc(5*sizeof(float));*/
+	/*e=malloc(3*sizeof(float*));
+	for (i = 0; i < 3; i++) {
+		e[i]=malloc(5*sizeof(float));
 	}
 
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 5; j++) {
+			e[i][j]=++v;
+			printf("%.10f", e[i][j]);
+		}
+		printf("\n" );
+	}*/
+	autocorrelacion(filas, &matrix_v, &matrix_h, &autoc_v, &autoc_h);
+	/*autocorrelacion(3,&e,&e,&autoc_e,&autoc_e);*/
+	for (i = 0; i < GATES; i++) {
+		printf("%.10f\n", autoc_h[i]);
+	}
   /*fclose(file_in);*/
   return 0;
 }
