@@ -6,12 +6,7 @@
 
 #define GATES 500
 
-struct Final{
-	uint16_t cantidad;
-	float *a_v;
-	float *a_h;
-};
-
+/*Realiza una operación de autocorrelacion para las matriz v y la matriz h*/
 void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float **autoc_v, float **autoc_h){
 	int i,j;
 	float temp_v;
@@ -28,7 +23,7 @@ void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float
 	}
 }
 
-/*Recibe la dirección del puntero para abrir un archivo.*/
+/*Recibe la dirección del puntero para abrir el archivo y cuenta la cantidad de pulsos que hay.*/
 int cantidad_pulsos(FILE **file_in){
   char *nombre="pulsos.iq";
   int cantidad=0;
@@ -42,24 +37,19 @@ int cantidad_pulsos(FILE **file_in){
     fseek(*file_in,4*samples*sizeof(float),SEEK_CUR);
     cantidad++;
   }
+	/*Posiciona el puntero al inicio del archivo*/
   fseek(*file_in,0,SEEK_SET);
   fclose(*file_in);
   return cantidad;
 }
 
 void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
-  uint16_t samples;
   FILE *file_V;
   FILE *file_H;
-  FILE *file_out_v;
-  FILE *file_out_h;
   int i,j,ciclo;
-  char valor[20];
   char *nombre="pulsos.iq";
   char *canal_v="canalV";
   char *canal_h="canalH";
-  char *out_v="matriz_v.csv";
-  char *out_h="matriz_h.csv";
   float *valores;
   char *lineas_v=malloc(100*sizeof(float));
   char *lineas_h=malloc(100*sizeof(float));
@@ -67,13 +57,11 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
   float acumulador_v;
   float acumulador_h;
   uint16_t aux;
+	uint16_t samples;
 	uint16_t filas=0;
 
   *file_in=fopen(nombre,"rb");
-  file_out_v=fopen(out_v,"a");
-  file_out_h=fopen(out_h,"a");
   while(fread(&samples,1,sizeof(uint16_t), *file_in)){
-    /*fread(&samples,sizeof(uint16_t), 1, *file_in);*/
   	file_V=fopen(canal_v,"w");
   	file_H=fopen(canal_h,"w");
 
@@ -88,12 +76,11 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     for (i = 0; i < ciclo; i+=2){
       /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
       if(j>=0&&j<samples){
-        sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-        fputs(valor,file_V);
+				fprintf(file_V, "%.10f\n", sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
       }
       if(j>=samples){
-        sprintf(valor,"%.10f\n",sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
-        fputs(valor,file_H);
+				fprintf(file_H, "%.10f\n", sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2)));
+
       }
       j++;
     }
@@ -117,8 +104,6 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
       muestras_gate++;
       if(muestras_gate==(int)(aux*2e-3)){
         if(cant<GATES){
-          fprintf(file_out_v, "%.10f,", acumulador_v/(int)(aux*2e-3));
-          fprintf(file_out_h, "%.10f,", acumulador_h/(int)(aux*2e-3));
 					(*matrix_v)[filas][cant]=acumulador_v/(int)(aux*2e-3);
 					(*matrix_h)[filas][cant]=acumulador_h/(int)(aux*2e-3);
           cant++;
@@ -129,8 +114,6 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
       }
     }
 		filas++;
-    fprintf(file_out_v, "\n");
-    fprintf(file_out_h, "\n");
     /*Libera la memoria para poder ser alocar memoria nuevamente.*/
     free(valores);
   }
@@ -144,16 +127,9 @@ int main(int argc, char const *argv[]) {
 	float *autoc_v;
 	float *autoc_h;
 	FILE *file_out;
-	float *otro;
 	char *binary="binario_autoc";
-/*	float *autoc_e;
-	float **e;*/
 	int i;
-	/*int j;*/
-	/*int v=0;*/
 	uint16_t filas=cantidad_pulsos(&file_in);
-	uint16_t algo;
-	struct Final final;
 	int cant_gates;
 
 	matrix_v=malloc(filas*sizeof(float*));
@@ -165,48 +141,14 @@ int main(int argc, char const *argv[]) {
 
   matrices(&file_in,&matrix_v,&matrix_h);
 
-	/*for (i = 0; i < 72; i++) {
-		for (j = 0; j < GATES ;j++) {
-			printf("%.10f      ", matrix_v[i][j]);
-		}
-		printf("\n");
-	}*/
-
 	autoc_v=malloc(GATES*sizeof(float));
 	autoc_h=malloc(GATES*sizeof(float));
-	/*autoc_e=malloc(5*sizeof(float));*/
-	/*e=malloc(3*sizeof(float*));
-	for (i = 0; i < 3; i++) {
-		e[i]=malloc(5*sizeof(float));
-	}
 
-	for (i = 0; i < 3; i++) {
-		for (j = 0; j < 5; j++) {
-			e[i][j]=++v;
-			printf("%.10f", e[i][j]);
-		}
-		printf("\n" );
-	}*/
 	autocorrelacion(filas, &matrix_v, &matrix_h, &autoc_v, &autoc_h);
-	/*autocorrelacion(3,&e,&e,&autoc_e,&autoc_e);*/
-	for (i = 0; i < GATES; i++) {
-		printf("%.10f\n", autoc_h[i]);
-	}
-
-	final.cantidad=GATES;
-	final.a_v=(float *)malloc(GATES*sizeof(float)+1);
-	final.a_h=(float *)malloc(GATES*sizeof(float)+1);
-	final.a_v=autoc_v;
-	final.a_h=autoc_h;
-
-	for (i = 0; i < GATES; i++) {
-		printf("cantidad %d, valores v %.10f, valores h %.10f\n", final.cantidad,final.a_v[i], final.a_h[i]);
-	}
 
 	file_out=fopen(binary,"wb");
-	/*fwrite(&final,1,sizeof(struct Final), file_out);*/
 	cant_gates=GATES;
-	fwrite(&cant_gates,1,sizeof(uint16_t),file_out);
+	fwrite(&cant_gates,1,sizeof(int),file_out);
 	for (i = 0; i < GATES; i++) {
 		fwrite(&autoc_v[i],1,sizeof(float),file_out);
 	}
@@ -214,24 +156,7 @@ int main(int argc, char const *argv[]) {
 		fwrite(&autoc_h[i],1,sizeof(float),file_out);
 	}
 
-
 	fclose(file_out);
-	/*file_in=fopen(binary,"rb");*/
 
-	file_out=fopen(binary,"rb");
-	/*fread(&algo,1,sizeof(uint16_t),file_out);
-	printf("cantidad %d\n", algo);*/
-
-	while(fread(&algo,1,sizeof(uint16_t),file_out))
-	{
-		printf("cantidad %d\n", algo);
-		algo=2*algo;
-		otro=malloc(algo*sizeof(float));
-		fread(otro, algo, sizeof(float), file_out);
-	}
-	for (i = 0; i < GATES; i++) {
-		printf("cantidad %d, valores v %.10f, valores h %.10f\n", algo, *(otro+i), otro[GATES+i]);
-	}
-  fclose(file_out);
   return 0;
 }
