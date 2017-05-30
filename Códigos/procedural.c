@@ -18,7 +18,24 @@ void autocorrelation(float *y, float *z){
 	}
 }*/
 
+/*Recibe la dirección del puntero para abrir un archivo.*/
+int cantidad_pulsos(FILE **file_in){
+  char *nombre="pulsos.iq";
+  int cantidad=0;
+  uint16_t samples;
+  *file_in=fopen(nombre,"rb");
+  if (*file_in==NULL){
+   perror("No se puede abrir el archivo binario");
+  }
 
+  while(fread(&samples,sizeof(uint16_t),1,*file_in)){
+    fseek(*file_in,4*samples*sizeof(float),SEEK_CUR);
+    cantidad++;
+  }
+  fseek(*file_in,0,SEEK_SET);
+  fclose(*file_in);
+  return cantidad;
+}
 
 void complejo(FILE **file_in,float ***matrix_v,float ***matrix_h){
   uint16_t samples;
@@ -115,13 +132,11 @@ int main(int argc, char const *argv[]) {
 	float **matrix_v;
 	float **matrix_h;
 	int i,j;
-	int filas;
+	int filas=cantidad_pulsos(&file_in);
 
-
-
-	matrix_v=malloc(72*sizeof(float*));
-	matrix_h=malloc(72*sizeof(float*));
-	for (i = 0; i < 72; i++) {
+	matrix_v=malloc(filas*sizeof(float*));
+	matrix_h=malloc(filas*sizeof(float*));
+	for (i = 0; i < filas; i++) {
 		matrix_v[i]=malloc(500*sizeof(float));
 		matrix_h[i]=malloc(500*sizeof(float));
 	}
@@ -131,11 +146,11 @@ int main(int argc, char const *argv[]) {
 
 	for (i = 0; i < 72; i++) {
 		for (j = 0; j < 500 ;j++) {
-			printf("%.10f      ", matrix_h[i][j]);
+			printf("%.10f      ", matrix_v[i][j]);
 		}
 		printf("\n");
 	}
 
-  fclose(file_in);
+  /*fclose(file_in);*/
   return 0;
 }
