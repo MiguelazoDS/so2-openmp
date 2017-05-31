@@ -1,5 +1,5 @@
 make:
-	gcc -g -pg -Wall -Werror -pedantic -lm procedural.c -o procedural
+	gcc -fopenmp -g -pg -Wall -Werror -pedantic -lm procedural.c -o procedural
 	gcc abrir\ binario.c -o abrir\ binario
 clean:
 	rm -rf procedural
@@ -11,6 +11,6 @@ clean:
 debug:
 	gdb procedural
 gprof:
-	gprof ./procedural > out
+	gprof procedural gmon.out
 proc:
 	./procedural
