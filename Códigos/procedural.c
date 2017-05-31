@@ -84,7 +84,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     muestras_gate=0;
     aux=samples;
     cant=0;
-		
+
 		for (i = 0; i < samples; i++) {
 			acumulador_v+=cv[i];
 			acumulador_h+=ch[i];
@@ -120,15 +120,17 @@ int main(int argc, char const *argv[]) {
 	int i;
 	uint16_t filas=cantidad_pulsos(&file_in);
 	int cant_gates;
-
+	double matrices_i, matrices_f, total_i, total_f;
+	total_i=omp_get_wtime();
 	matrix_v=malloc(filas*sizeof(float*));
 	matrix_h=malloc(filas*sizeof(float*));
 	for (i = 0; i < filas; i++) {
 		matrix_v[i]=malloc(GATES*sizeof(float));
 		matrix_h[i]=malloc(GATES*sizeof(float));
 	}
-
+	matrices_i=omp_get_wtime();
   matrices(&file_in,&matrix_v,&matrix_h);
+	matrices_f=omp_get_wtime();
 
 	autoc_v=malloc(GATES*sizeof(float));
 	autoc_h=malloc(GATES*sizeof(float));
@@ -146,6 +148,7 @@ int main(int argc, char const *argv[]) {
 	}
 
 	fclose(file_out);
-
+	total_f=omp_get_wtime();
+	printf("\nTiempo total: %.10f\n\nTiempo de la función matrices: %.10f\n\n", total_f-total_i, matrices_f-matrices_i);
   return 0;
 }
