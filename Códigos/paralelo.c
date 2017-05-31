@@ -12,6 +12,7 @@ void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float
 	int i,j;
 	float temp_v;
 	float temp_h;
+	#pragma omp for
 	for (i = 0; i < GATES; i++) {
 		for (j = 0; j < filas-1; j++) {
 			temp_v+=(*matrix_v)[j][i]*(*matrix_v)[j+1][i];
@@ -68,6 +69,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     fread(valores, ciclo, sizeof(float), *file_in);
     /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
     j=0;
+		#pragma omp for
     for (i = 0; i < ciclo; i+=2){
       /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
       if(j>=0&&j<samples){
@@ -85,6 +87,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     aux=samples;
     cant=0;
 
+		#pragma omp for
 		for (i = 0; i < samples; i++) {
 			acumulador_v+=cv[i];
 			acumulador_h+=ch[i];
@@ -121,6 +124,15 @@ int main(int argc, char const *argv[]) {
 	uint16_t filas=cantidad_pulsos(&file_in);
 	int cant_gates;
 	double matrices_i, matrices_f, total_i, total_f;
+
+	if(argc<2){
+		printf("Se debe ingresar una cantidad de hilos\n");
+		exit(1);
+	}
+	else{
+		omp_set_num_threads(atoi(argv[1]));
+	}
+
 	total_i=omp_get_wtime();
 	matrix_v=malloc(filas*sizeof(float*));
 	matrix_h=malloc(filas*sizeof(float*));
@@ -129,12 +141,14 @@ int main(int argc, char const *argv[]) {
 		matrix_h[i]=malloc(GATES*sizeof(float));
 	}
 	matrices_i=omp_get_wtime();
+	#pragma omp parallel
   matrices(&file_in,&matrix_v,&matrix_h);
 	matrices_f=omp_get_wtime();
 
 	autoc_v=malloc(GATES*sizeof(float));
 	autoc_h=malloc(GATES*sizeof(float));
 
+	#pragma omp parallel
 	autocorrelacion(filas, &matrix_v, &matrix_h, &autoc_v, &autoc_h);
 
 	file_out=fopen(binary,"wb");
