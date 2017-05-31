@@ -59,7 +59,10 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 	double complejos_i, complejos_f, matrices_i, matrices_f;
 
   *file_in=fopen(nombre,"rb");
+	printf("hilo: %d\n", omp_get_thread_num());
+
   while(fread(&samples,1,sizeof(uint16_t), *file_in)){
+
     /*La cantidad total de muestras de cada pulso es 4 veces el valor samples.*/
     ciclo=4*samples;
     /*Reservo la cantidad necesaria para guardar un pulso.*/
@@ -70,7 +73,6 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
     j=0;
 		complejos_i=omp_get_wtime();
-		#pragma omp for
     for (i = 0; i < ciclo; i+=2){
       /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
       if(j>=0&&j<samples){
