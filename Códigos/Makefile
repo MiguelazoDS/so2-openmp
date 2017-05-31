@@ -3,9 +3,7 @@ make:
 	gcc abrir\ binario.c -o abrir\ binario
 clean:
 	rm -rf procedural
-	rm -rf canal?
 	rm -rf gmon.out
-	rm -rf out
 	rm -rf binario_autoc
 	rm -rf abrir\ binario
 debug:
