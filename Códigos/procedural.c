@@ -56,6 +56,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 	uint16_t filas=0;
 	float *cv;
 	float *ch;
+	double complejos_i, complejos_f, matrices_i, matrices_f;
 
   *file_in=fopen(nombre,"rb");
   while(fread(&samples,1,sizeof(uint16_t), *file_in)){
@@ -68,6 +69,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     fread(valores, ciclo, sizeof(float), *file_in);
     /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
     j=0;
+		complejos_i=omp_get_wtime();
     for (i = 0; i < ciclo; i+=2){
       /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
       if(j>=0&&j<samples){
@@ -78,6 +80,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
       }
       j++;
     }
+		complejos_f=omp_get_wtime();
 
     acumulador_v=0;
     acumulador_h=0;
@@ -85,6 +88,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     aux=samples;
     cant=0;
 
+		matrices_i=omp_get_wtime();
 		for (i = 0; i < samples; i++) {
 			acumulador_v+=cv[i];
 			acumulador_h+=ch[i];
@@ -100,12 +104,15 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 				}
 			}
 		}
+		matrices_f=omp_get_wtime();
 		filas++;
     /*Libera la memoria para poder ser alocar memoria nuevamente.*/
     free(valores);
 		free(cv);
 		free(ch);
   }
+	printf("\nCálculo de complejos: %.5f\n\nCálculo de matrices: %.5f\n", filas*(complejos_f-complejos_i), filas*(matrices_f-matrices_i));
+
 }
 
 int main(int argc, char const *argv[]) {
