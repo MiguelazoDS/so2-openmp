@@ -14,5 +14,3 @@ gprof:
 	gprof procedural gmon.out
 proc:
 	./procedural
-paral:
-	./paralelo
