@@ -2,7 +2,7 @@
 
 use Chart::Gnuplot;
 
-my $ejecuciones=1;
+my $ejecuciones=100;
 my @tiempos;
 my @hilos;
 
