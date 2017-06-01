@@ -59,10 +59,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 	double complejos_i, complejos_f, matrices_i, matrices_f;
 
   *file_in=fopen(nombre,"rb");
-	printf("hilo: %d\n", omp_get_thread_num());
-
   while(fread(&samples,1,sizeof(uint16_t), *file_in)){
-
     /*La cantidad total de muestras de cada pulso es 4 veces el valor samples.*/
     ciclo=4*samples;
     /*Reservo la cantidad necesaria para guardar un pulso.*/
@@ -73,14 +70,10 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
     j=0;
 		complejos_i=omp_get_wtime();
-    for (i = 0; i < ciclo; i+=2){
+    for (i = 0; i < (2*samples); i+=2){
       /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
-      if(j>=0&&j<samples){
-				cv[j]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
-      }
-      if(j>=samples){
-				ch[j-samples]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
-      }
+			cv[j]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
+			ch[j]=sqrt(pow(*(valores+i+samples),2)+pow(*(valores+i+samples+1),2));
       j++;
     }
 		complejos_f=omp_get_wtime();
@@ -114,8 +107,8 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 		free(cv);
 		free(ch);
   }
-	#pragma omp single
 	printf("\nCálculo de complejos: %.5f\n\nCálculo de matrices: %.5f\n", filas*(complejos_f-complejos_i), filas*(matrices_f-matrices_i));
+
 }
 
 int main(int argc, char const *argv[]) {
@@ -131,15 +124,6 @@ int main(int argc, char const *argv[]) {
 	uint16_t filas=cantidad_pulsos(&file_in);
 	int cant_gates;
 	double matrices_i, matrices_f, total_i, total_f;
-
-	if(argc<2){
-		printf("Se debe ingresar una cantidad de hilos\n");
-		exit(1);
-	}
-	else{
-		omp_set_num_threads(atoi(argv[1]));
-	}
-
 	total_i=omp_get_wtime();
 	matrix_v=malloc(filas*sizeof(float*));
 	matrix_h=malloc(filas*sizeof(float*));
@@ -148,9 +132,9 @@ int main(int argc, char const *argv[]) {
 		matrix_h[i]=malloc(GATES*sizeof(float));
 	}
 	matrices_i=omp_get_wtime();
-	#pragma omp parallel
   matrices(&file_in,&matrix_v,&matrix_h);
 	matrices_f=omp_get_wtime();
+
 	autoc_v=malloc(GATES*sizeof(float));
 	autoc_h=malloc(GATES*sizeof(float));
 

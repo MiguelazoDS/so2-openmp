@@ -70,14 +70,10 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
     /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
     j=0;
 		complejos_i=omp_get_wtime();
-    for (i = 0; i < ciclo; i+=2){
+    for (i = 0; i < (2*samples); i+=2){
       /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
-      if(j>=0&&j<samples){
-				cv[j]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
-      }
-      if(j>=samples){
-				ch[j-samples]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
-      }
+			cv[j]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
+			ch[j]=sqrt(pow(*(valores+i+samples),2)+pow(*(valores+i+samples+1),2));
       j++;
     }
 		complejos_f=omp_get_wtime();
