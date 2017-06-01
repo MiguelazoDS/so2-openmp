@@ -8,6 +8,7 @@ clean:
 	rm -rf gmon.out
 	rm -rf binario_autoc
 	rm -rf abrir\ binario
+	rm -rf grafico.jpg
 debug:
 	gdb procedural
 gprof:
