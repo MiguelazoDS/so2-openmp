@@ -12,6 +12,8 @@ void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float
 	int i,j;
 	float temp_v;
 	float temp_h;
+	double autoc_i, autoc_f;
+	autoc_i=omp_get_wtime();
 	for (i = 0; i < GATES; i++) {
 		for (j = 0; j < filas-1; j++) {
 			temp_v+=(*matrix_v)[j][i]*(*matrix_v)[j+1][i];
@@ -22,6 +24,8 @@ void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float
 		temp_v=0;
 		temp_h=0;
 	}
+	autoc_f=omp_get_wtime();
+	printf("\nTiempo autocorrelación: %.5f\n", autoc_f-autoc_i);
 }
 
 /*Recibe la dirección del puntero para abrir el archivo y cuenta la cantidad de pulsos que hay.*/
@@ -29,10 +33,8 @@ int cantidad_pulsos(FILE **file_in){
   char *nombre="pulsos.iq";
   int cantidad=0;
   uint16_t samples;
+
   *file_in=fopen(nombre,"rb");
-  if (*file_in==NULL){
-   perror("No se puede abrir el archivo binario");
-  }
 
   while(fread(&samples,1,sizeof(uint16_t),*file_in)){
     fseek(*file_in,4*samples*sizeof(float),SEEK_CUR);
@@ -44,8 +46,8 @@ int cantidad_pulsos(FILE **file_in){
   return cantidad;
 }
 
-void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
-  int i,j,ciclo;
+void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h,int hilos){
+  int i,ciclo;
   char *nombre="pulsos.iq";
   float *valores;
   int muestras_gate,cant=0;
@@ -68,16 +70,19 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 		ch=malloc(samples*sizeof(float));
     fread(valores, ciclo, sizeof(float), *file_in);
     /*indice para incrementar de a 1 la variable donde guarda los valores complejos*/
-    j=0;
 		complejos_i=omp_get_wtime();
-    for (i = 0; i < (2*samples); i+=2){
-      /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
-			cv[j]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
-			ch[j]=sqrt(pow(*(valores+i+samples),2)+pow(*(valores+i+samples+1),2));
-      j++;
-    }
+		printf("Afuera de pragma hilo: %d\n", omp_get_thread_num());
+		#pragma omp parallel shared(cv,ch) num_threads(hilos)
+		{
+			printf("Dentro de pragma hilo: %d\n", omp_get_thread_num());
+			#pragma omp for private(i) schedule(static)
+	    for (i = 0; i < (2*samples); i+=2){
+	      /*Guarda los valores complejos del canal V en un archivo y los del canal H en otro archivo.*/
+				cv[i/2]=sqrt(pow(*(valores+i),2)+pow(*(valores+i+1),2));
+				ch[i/2]=sqrt(pow(*(valores+i+samples),2)+pow(*(valores+i+samples+1),2));
+	    }
+		}
 		complejos_f=omp_get_wtime();
-
     acumulador_v=0;
     acumulador_h=0;
     muestras_gate=0;
@@ -102,28 +107,31 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 		}
 		matrices_f=omp_get_wtime();
 		filas++;
-    /*Libera la memoria para poder ser alocar memoria nuevamente.*/
-    free(valores);
-		free(cv);
-		free(ch);
   }
 	printf("\nCálculo de complejos: %.5f\n\nCálculo de matrices: %.5f\n", filas*(complejos_f-complejos_i), filas*(matrices_f-matrices_i));
-
 }
 
 int main(int argc, char const *argv[]) {
   /*manejadores de archivos.*/
   FILE *file_in;
+	FILE *file_out;
+	/*Variables donde se guardan las matrices gate-pulso y los resultados
+	de la autocorrelacion para cada canal*/
 	float **matrix_v;
 	float **matrix_h;
 	float *autoc_v;
 	float *autoc_h;
-	FILE *file_out;
 	char *binary="binario_autoc";
 	int i;
 	uint16_t filas=cantidad_pulsos(&file_in);
 	int cant_gates;
+	/*Variables para contar tiempo de ejecución*/
 	double matrices_i, matrices_f, total_i, total_f;
+
+	if(argc<2){
+		printf("Se debe ingresar una cantidad de hilos\n");
+	}
+
 	total_i=omp_get_wtime();
 	matrix_v=malloc(filas*sizeof(float*));
 	matrix_h=malloc(filas*sizeof(float*));
@@ -132,7 +140,7 @@ int main(int argc, char const *argv[]) {
 		matrix_h[i]=malloc(GATES*sizeof(float));
 	}
 	matrices_i=omp_get_wtime();
-  matrices(&file_in,&matrix_v,&matrix_h);
+  matrices(&file_in,&matrix_v,&matrix_h,atoi(argv[1]));
 	matrices_f=omp_get_wtime();
 
 	autoc_v=malloc(GATES*sizeof(float));
@@ -140,6 +148,7 @@ int main(int argc, char const *argv[]) {
 
 	autocorrelacion(filas, &matrix_v, &matrix_h, &autoc_v, &autoc_h);
 
+	/*Se guardan los resultados de la autocorrelacion en un archivo binario*/
 	file_out=fopen(binary,"wb");
 	cant_gates=GATES;
 	fwrite(&cant_gates,1,sizeof(int),file_out);
@@ -152,6 +161,6 @@ int main(int argc, char const *argv[]) {
 
 	fclose(file_out);
 	total_f=omp_get_wtime();
-	printf("\nTiempo total: %.10f\n\nTiempo de la función matrices: %.10f\n\n", total_f-total_i, matrices_f-matrices_i);
+	printf("\nTiempo total: %.5f\n\nTiempo de la función matrices: %.5f\n\n", total_f-total_i, matrices_f-matrices_i);
   return 0;
 }

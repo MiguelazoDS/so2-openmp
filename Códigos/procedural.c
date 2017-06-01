@@ -102,10 +102,6 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h){
 		}
 		matrices_f=omp_get_wtime();
 		filas++;
-    /*Libera la memoria para poder ser alocar memoria nuevamente.*/
-    free(valores);
-		free(cv);
-		free(ch);
   }
 	printf("\nCálculo de complejos: %.5f\n\nCálculo de matrices: %.5f\n", filas*(complejos_f-complejos_i), filas*(matrices_f-matrices_i));
 }
