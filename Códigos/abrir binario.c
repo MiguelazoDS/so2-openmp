@@ -1,9 +1,14 @@
+/**@abrir binario.c
+@author Cazajous Miguel A.
+@date 13 May 2018.
+@brief Socket TCP cliente.*/
+
 #include <stdlib.h>
 #include <stdio.h>
 
 #define  GATES 500
 
-
+/**Función principal*/
 int main(int argc, char const *argv[]) {
   float *otro;
   int i,algo;

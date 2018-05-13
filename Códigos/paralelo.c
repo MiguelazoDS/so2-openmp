@@ -1,3 +1,8 @@
+/**@paralelo.c
+@author Cazajous Miguel A.
+@date 13 May 2018.
+@brief Socket TCP cliente.*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -7,7 +12,7 @@
 
 #define GATES 500
 
-/*Realiza una operación de autocorrelacion para las matriz v y la matriz h*/
+/*Función que realiza una operación de autocorrelacion para las matriz v y la matriz h*/
 void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float **autoc_v, float **autoc_h){
 	int i,j;
 	float temp_v;
@@ -28,7 +33,7 @@ void autocorrelacion(uint16_t filas, float ***matrix_v, float ***matrix_h, float
 	printf("\nTiempo autocorrelación: %.5f\n", autoc_f-autoc_i);
 }
 
-/*Recibe la dirección del puntero para abrir el archivo y cuenta la cantidad de pulsos que hay.*/
+/**Función que recibe la dirección del puntero para abrir el archivo y cuenta la cantidad de pulsos que hay en ese archivo.*/
 int cantidad_pulsos(FILE **file_in){
   char *nombre="pulsos.iq";
   int cantidad=0;
@@ -46,6 +51,7 @@ int cantidad_pulsos(FILE **file_in){
   return cantidad;
 }
 
+/**Función que arma matrices para ambos canales con el formato (gate,pulso)*/
 void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h,int hilos){
   int i,ciclo;
   char *nombre="pulsos.iq";
@@ -111,6 +117,7 @@ void matrices(FILE **file_in,float ***matrix_v,float ***matrix_h,int hilos){
 	printf("\nCálculo de complejos: %.5f\n\nCálculo de matrices: %.5f\n", filas*(complejos_f-complejos_i), filas*(matrices_f-matrices_i));
 }
 
+/**Función principal*/
 int main(int argc, char const *argv[]) {
   /*manejadores de archivos.*/
   FILE *file_in;
